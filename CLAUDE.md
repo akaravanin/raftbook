@@ -18,7 +18,7 @@ docker compose up --build
 docker compose up -d postgres redis
 
 # Terminal 2 — backend (seeds DB on first boot)
-DATABASE_URL=postgres://raftbook:raftbook@localhost:5432/raftbook cargo run -p engined
+DATABASE_URL=postgres://raftbook:raftbook@localhost:5433/raftbook HTTP_ADDR=0.0.0.0:8081 cargo run -p engined
 
 # Terminal 3 — frontend dev server (proxies /graphql → :8080)
 cd frontend && npm install && npm run dev

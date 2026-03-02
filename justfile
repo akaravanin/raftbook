@@ -89,4 +89,4 @@ grpc-stream:
 
 # Open GraphiQL in the browser
 graphiql:
-    open http://localhost:8080/graphiql 2>/dev/null || xdg-open http://localhost:8080/graphiql
+    open http://localhost:8081/graphiql 2>/dev/null || xdg-open http://localhost:8081/graphiql
