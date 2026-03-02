@@ -15,6 +15,31 @@ title() { echo -e "\n${BOLD}$*${NC}"; }
 
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
+# ── Source rustup env (not always in PATH in non-interactive shells) ───────────
+# shellcheck disable=SC1091
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+# ── Pre-flight checks ──────────────────────────────────────────────────────────
+command -v docker &>/dev/null || die "'docker' not found. Install: https://docs.docker.com/engine/install/"
+
+# Determine backend mode: local cargo or Docker
+if command -v cargo &>/dev/null; then
+  BACKEND_MODE=local
+else
+  warn "cargo not found — running backend in Docker instead."
+  warn "To run locally, install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  BACKEND_MODE=docker
+fi
+
+# Determine frontend mode: local npm or Docker node container
+if command -v npm &>/dev/null; then
+  FRONTEND_MODE=local
+else
+  warn "npm not found — running frontend in a Docker node container instead."
+  warn "To run locally, install Node.js: https://nodejs.org/"
+  FRONTEND_MODE=docker
+fi
+
 # ── Check if already running ───────────────────────────────────────────────────
 if [ -f "$PID_DIR/backend.pid" ] && kill -0 "$(cat "$PID_DIR/backend.pid")" 2>/dev/null; then
   warn "Backend is already running (PID $(cat "$PID_DIR/backend.pid")). Run ./scripts/restart.sh to restart."
@@ -40,42 +65,66 @@ for i in $(seq 1 30); do
 done
 
 # ── 3. Start backend ────────────────────────────────────────────────────────────
-title "Starting backend..."
-info "Logs → logs/backend.log"
-info "First run compiles the binary — this may take a minute."
-
+title "Starting backend ($BACKEND_MODE mode)..."
 cd "$ROOT"
-DATABASE_URL=postgres://raftbook:raftbook@localhost:5433/raftbook \
-  HTTP_ADDR=0.0.0.0:8081 \
-  cargo run -p engined >> "$LOG_DIR/backend.log" 2>&1 &
-BACKEND_PID=$!
-echo "$BACKEND_PID" > "$PID_DIR/backend.pid"
-info "Backend PID: $BACKEND_PID"
 
-# Wait briefly and confirm it didn't crash immediately
-sleep 2
-if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
-  die "Backend exited immediately. Check logs/backend.log"
+if [ "$BACKEND_MODE" = "local" ]; then
+  info "Logs → logs/backend.log"
+  info "First run compiles the binary — this may take a minute."
+  DATABASE_URL=postgres://raftbook:raftbook@localhost:5433/raftbook \
+    HTTP_ADDR=0.0.0.0:8081 \
+    cargo run -p engined >> "$LOG_DIR/backend.log" 2>&1 &
+  BACKEND_PID=$!
+  echo "$BACKEND_PID" > "$PID_DIR/backend.pid"
+  info "Backend PID: $BACKEND_PID"
+
+  sleep 2
+  if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    die "Backend exited immediately. Check logs/backend.log"
+  fi
+else
+  # Docker mode: build + start the engine container
+  info "Building and starting engine container (first build may take a few minutes)..."
+  docker compose up -d --build engine
+  # Use a sentinel PID of 0 to signal Docker mode to stop.sh
+  echo "docker" > "$PID_DIR/backend.pid"
+  info "Engine running in Docker (logs: docker compose logs -f engine)"
 fi
 
 # ── 4. Start frontend ───────────────────────────────────────────────────────────
-title "Starting frontend..."
+title "Starting frontend ($FRONTEND_MODE mode)..."
+cd "$ROOT"
 
-if [ ! -d "$ROOT/frontend/node_modules" ]; then
-  info "Installing frontend dependencies (first time)..."
-  cd "$ROOT/frontend" && npm install
-fi
+if [ "$FRONTEND_MODE" = "local" ]; then
+  if [ ! -d "$ROOT/frontend/node_modules" ]; then
+    info "Installing frontend dependencies (first time)..."
+    cd "$ROOT/frontend" && npm install
+  fi
+  info "Logs → logs/frontend.log"
+  cd "$ROOT/frontend"
+  npm run dev >> "$LOG_DIR/frontend.log" 2>&1 &
+  FRONTEND_PID=$!
+  echo "$FRONTEND_PID" > "$PID_DIR/frontend.pid"
+  info "Frontend PID: $FRONTEND_PID"
 
-info "Logs → logs/frontend.log"
-cd "$ROOT/frontend"
-npm run dev >> "$LOG_DIR/frontend.log" 2>&1 &
-FRONTEND_PID=$!
-echo "$FRONTEND_PID" > "$PID_DIR/frontend.pid"
-info "Frontend PID: $FRONTEND_PID"
-
-sleep 1
-if ! kill -0 "$FRONTEND_PID" 2>/dev/null; then
-  die "Frontend exited immediately. Check logs/frontend.log"
+  sleep 1
+  if ! kill -0 "$FRONTEND_PID" 2>/dev/null; then
+    die "Frontend exited immediately. Check logs/frontend.log"
+  fi
+else
+  # Docker mode: use a node:20-alpine container with host networking so the
+  # Vite proxy (localhost:8081) reaches the backend on the host.
+  docker rm -f raftbook-frontend-dev &>/dev/null || true
+  info "Starting frontend dev container (first run downloads node:20-alpine + installs deps)..."
+  docker run -d --rm \
+    --name raftbook-frontend-dev \
+    --network host \
+    -v "$ROOT/frontend:/app" \
+    -w /app \
+    node:20-alpine \
+    sh -c "npm install && npm run dev -- --host 0.0.0.0"
+  echo "docker-container:raftbook-frontend-dev" > "$PID_DIR/frontend.pid"
+  info "Frontend running in Docker (logs: docker logs -f raftbook-frontend-dev)"
 fi
 
 # ── Done ────────────────────────────────────────────────────────────────────────

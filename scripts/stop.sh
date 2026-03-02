@@ -55,8 +55,31 @@ kill_proc() {
 
 echo -e "\n${BOLD}Stopping RaftBook stack...${NC}"
 
-kill_proc frontend
-kill_proc backend
+# Frontend may be a local process or a Docker container
+FRONTEND_PID_FILE="$PID_DIR/frontend.pid"
+if [ -f "$FRONTEND_PID_FILE" ]; then
+  FRONTEND_PID_VAL=$(cat "$FRONTEND_PID_FILE")
+  if [[ "$FRONTEND_PID_VAL" == docker-container:* ]]; then
+    CONTAINER="${FRONTEND_PID_VAL#docker-container:}"
+    info "Stopping frontend container ($CONTAINER)..."
+    docker rm -f "$CONTAINER" &>/dev/null || true
+    rm -f "$FRONTEND_PID_FILE"
+  else
+    kill_proc frontend
+  fi
+else
+  warn "frontend: no PID file found (already stopped?)"
+fi
+
+# Backend may be a local process or a Docker container
+BACKEND_PID_FILE="$PID_DIR/backend.pid"
+if [ -f "$BACKEND_PID_FILE" ] && [ "$(cat "$BACKEND_PID_FILE")" = "docker" ]; then
+  info "Stopping engine container..."
+  cd "$ROOT" && docker compose stop engine
+  rm -f "$BACKEND_PID_FILE"
+else
+  kill_proc backend
+fi
 
 info "Stopping docker infra..."
 cd "$ROOT"

@@ -3,15 +3,17 @@ mod query;
 mod subscription;
 pub mod types;
 
-use async_graphql::Schema;
-use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
+use async_graphql::{futures_util::StreamExt, Schema};
+use async_graphql_axum::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
 use axum::{
-    extract::State,
+    extract::{
+        ws::WebSocketUpgrade,
+        State,
+    },
     response::{Html, IntoResponse},
     routing::{get, post},
     Router,
 };
-use sqlx::PgPool;
 
 use crate::AppState;
 use mutation::Mutation;
@@ -45,9 +47,13 @@ async fn graphql_handler(
 
 async fn graphql_ws_handler(
     State(schema): State<ExchangeSchema>,
-    protocol: GraphQLSubscription,
+    protocol: GraphQLProtocol,
+    ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    protocol.on_upgrade(schema)
+    ws.on_upgrade(move |socket| {
+        let (write, read) = socket.split();
+        GraphQLWebSocket::new_with_pair(write, read, schema, protocol).serve()
+    })
 }
 
 async fn graphiql_handler() -> impl IntoResponse {

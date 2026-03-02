@@ -1,6 +1,6 @@
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
 import { GraphiQL } from 'graphiql';
-import 'graphiql/graphiql.min.css';
+import 'graphiql/style.css';
 import { EXPLORER_DEFAULT_QUERY } from '../queries';
 
 // The fetcher handles both HTTP queries/mutations and WebSocket subscriptions.

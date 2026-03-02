@@ -17,9 +17,9 @@ async-graphql      = { version = "7", features = ["tracing"] }
 async-graphql-axum = "7"
 
 # HTTP server
-axum             = "0.7"
-tower            = "0.4"
-tower-http       = { version = "0.5", features = ["trace", "cors"] }
+axum             = "0.8"
+tower            = "0.5"
+tower-http       = { version = "0.6", features = ["trace", "cors"] }
 
 # Async utilities
 tokio            = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
