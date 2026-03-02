@@ -11,7 +11,7 @@ services:
       - HTTP_ADDR=0.0.0.0:8080
     ports:
       - "50051:50051" # gRPC command plane
-      - "8080:8080"   # HTTP / GraphQL query plane
+      - "8081:8080"   # HTTP / GraphQL query plane
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,7 +26,7 @@ services:
       - POSTGRES_PASSWORD=raftbook
       - POSTGRES_DB=raftbook
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Auto-runs SQL files on first DB creation.

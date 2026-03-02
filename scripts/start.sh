@@ -45,7 +45,8 @@ info "Logs → logs/backend.log"
 info "First run compiles the binary — this may take a minute."
 
 cd "$ROOT"
-DATABASE_URL=postgres://raftbook:raftbook@localhost:5432/raftbook \
+DATABASE_URL=postgres://raftbook:raftbook@localhost:5433/raftbook \
+  HTTP_ADDR=0.0.0.0:8081 \
   cargo run -p engined >> "$LOG_DIR/backend.log" 2>&1 &
 BACKEND_PID=$!
 echo "$BACKEND_PID" > "$PID_DIR/backend.pid"
@@ -81,7 +82,7 @@ fi
 echo ""
 echo -e "${GREEN}${BOLD}Stack is running!${NC}"
 echo -e "  ${BOLD}UI${NC}       → http://localhost:3000"
-echo -e "  ${BOLD}GraphQL${NC}  → http://localhost:8080/graphiql"
+echo -e "  ${BOLD}GraphQL${NC}  → http://localhost:8081/graphiql"
 echo -e "  ${BOLD}gRPC${NC}     → localhost:50051"
 echo ""
 echo -e "  Tail backend:  ${YELLOW}tail -f $LOG_DIR/backend.log${NC}"

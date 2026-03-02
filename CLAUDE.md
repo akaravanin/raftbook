@@ -9,7 +9,7 @@ idempotent command handling, gRPC + GraphQL API, React frontend.
 ```bash
 docker compose up --build
 # gRPC command plane  → localhost:50051
-# GraphQL / GraphiQL  → localhost:8080/graphiql
+# GraphQL / GraphiQL  → localhost:8081/graphiql
 ```
 
 ### Option B — Local dev with UI hot-reload (recommended)
