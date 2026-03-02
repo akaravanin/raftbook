@@ -1,0 +1,54 @@
+
+services:
+  engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_LOG=engined=info,api=debug,command_handler=debug
+      - DATABASE_URL=postgres://raftbook:raftbook@postgres:5432/raftbook
+      - GRPC_ADDR=0.0.0.0:50051
+      - HTTP_ADDR=0.0.0.0:8080
+    ports:
+      - "50051:50051" # gRPC command plane
+      - "8080:8080"   # HTTP / GraphQL query plane
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=raftbook
+      - POSTGRES_PASSWORD=raftbook
+      - POSTGRES_DB=raftbook
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-runs SQL files on first DB creation.
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raftbook -d raftbook"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:

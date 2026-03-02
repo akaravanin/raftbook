@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "crates/matching_engine",
+  "crates/event_log",
+  "crates/command_handler",
+  "crates/api",
+  "crates/engined",
+]
+resolver = "2"

@@ -1,0 +1,28 @@
+{
+  "name": "raftbook-frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "urql": "^4.0.6",
+    "@urql/core": "^4.2.3",
+    "graphql": "^16.8.1",
+    "graphql-ws": "^5.14.3",
+    "graphiql": "^3.2.3",
+    "@graphiql/toolkit": "^0.9.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.60",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  }
+}

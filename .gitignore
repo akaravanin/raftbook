@@ -1,0 +1,31 @@
+# Rust build artifacts
+/target
+
+# Frontend build + deps
+frontend/node_modules
+frontend/dist
+
+# Runtime files created by scripts/start.sh
+.pids/
+logs/
+
+# Environment files (never commit real credentials)
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+
+# Test coverage
+coverage/
+*.lcov
+.tarpaulin-report.html

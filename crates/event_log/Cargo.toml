@@ -1,0 +1,11 @@
+[package]
+name = "event_log"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+matching_engine = { path = "../matching_engine" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+async-trait = "0.1"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "json"] }

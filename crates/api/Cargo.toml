@@ -1,0 +1,36 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+command_handler  = { path = "../command_handler" }
+event_log        = { path = "../event_log" }
+matching_engine  = { path = "../matching_engine" }
+
+# gRPC
+tonic            = "0.12"
+prost            = "0.13"
+
+# GraphQL
+async-graphql      = { version = "7", features = ["tracing"] }
+async-graphql-axum = "7"
+
+# HTTP server
+axum             = "0.7"
+tower            = "0.4"
+tower-http       = { version = "0.5", features = ["trace", "cors"] }
+
+# Async utilities
+tokio            = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
+tokio-stream     = { version = "0.1", features = ["sync"] }
+async-stream     = "0.3"
+
+# DB (shared pool for read queries)
+sqlx             = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres"] }
+
+# Observability
+tracing          = "0.1"
+
+[build-dependencies]
+tonic-build = "0.12"

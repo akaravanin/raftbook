@@ -1,0 +1,12 @@
+[package]
+name = "command_handler"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+matching_engine = { path = "../matching_engine" }
+event_log       = { path = "../event_log" }
+thiserror       = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt"] }

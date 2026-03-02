@@ -1,0 +1,13 @@
+[package]
+name = "engined"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+matching_engine   = { path = "../matching_engine" }
+event_log         = { path = "../event_log" }
+command_handler   = { path = "../command_handler" }
+api               = { path = "../api" }
+tracing           = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tokio             = { version = "1", features = ["macros", "rt-multi-thread"] }
